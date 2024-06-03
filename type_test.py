@@ -1,5 +1,8 @@
 import random 
-import curses
+import curses 
+from curses import wrapper
+
+
 
 def sentences_func():
     sentences = (
@@ -26,7 +29,8 @@ def sentences_func():
     )
     return sentences
 
-def print_sentences(sentences: tuple):
+def random_sentences(sentences: tuple):
+    """"
     print("pick number of sentences: \n")
     bulk, run, counter, sen = int(input()), True, 0, ""
 
@@ -40,18 +44,71 @@ def print_sentences(sentences: tuple):
 
     print(sen)
     return sen
+    """
+    sen_random = random.choice(sentences)
+    return sen_random
 
-def type_test(sen):
-    stdscr = curses.initscr()
+def colors():
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+    
+def draw_string(window, strs, posX, posY):
+    window.clear()
+    window.addstr(posX, posY, strs)
+    window.refresh()
+    window.getch()
+
+def draw_char(window, chars, posY, posX, right):
+    if right:
+        window.addch(posY, posX, chars, curses.color_pair(1))
+    else:
+        window.addch(posY, posX, chars, curses.color_pair(2))
+    window.refresh()
+
+def delete_char(window,replacer, posY, posX):
+    window.delch(posY, posX)
+    window.insch(posY, posX, replacer)
+    window.refresh()
+
+
+def type_test(sen, window):
+
+    colors()
+    right = True
+    counter = 0
     curses.filter()
+    while counter <= len(sen):
+        key = window.getch()
+
+        if not key == 8:
+            
+            if sen[counter] == chr(key):
+                right = True
+            else:
+                right = False
+
+            draw_char(window, key, 0, counter, right)
+            counter += 1
+
+        elif counter >= 1:
+            counter -= 1
+            replacer = sen[counter]
+            delete_char(window, replacer, 0, counter)
+            
+        
+    
+
+def main(window):
+    
+    sen_tup = sentences_func()
+    welcome_message = "Welcome to this typing test! You will be given a block of text and need to type it as fast as possible.\n Press any key to start."
+    draw_string(window, welcome_message, 0, 0)
+    random_s = random_sentences(sen_tup)
+    draw_string(window, random_s, 0 , 0)
+    type_test(random_s, window)
 
 
-def main():
-    sentences = sentences_func()
-    print("Welcome to this typing test! You will be given a block of text and need to type it as fast as possible.\n Press any key to start")
-    if(input()):
-        sen = print_sentences(sentences)
-        type_test(sen)
+
 
 if __name__ == "__main__":
-    main()
+    wrapper(main)
