@@ -1,4 +1,5 @@
 import random 
+import time
 import curses 
 from curses import wrapper
 
@@ -70,6 +71,23 @@ def delete_char(window,replacer, posY, posX):
     window.insch(posY, posX, replacer)
     window.refresh()
 
+def draw_wpm(window, t, n, wpm_list):
+    t = time.time() - t
+    wpm = 60.0/t
+    if(n == 0):
+        wpm_list.append(wpm)
+        window.addstr(1, 5, f"{wpm}")
+    else:
+        wpm_list.append(wpm)
+        res = 0
+        for i in wpm_list:
+            res += i
+        
+        res = res/n
+        window.addstr(1, 5, f"{res}")
+    window.refresh()
+    return time.time()
+
 
 def type_test(sen, window):
 
@@ -77,10 +95,15 @@ def type_test(sen, window):
     right = True
     counter = 0
     curses.filter()
+    t = time.time()
+    wpm_list: list = []
     while counter <= len(sen):
         key = window.getch()
+        
+        if counter == len(sen):
+            break
 
-        if not key == 8:
+        if not key == 8 and not key ==32:
             
             if sen[counter] == chr(key):
                 right = True
@@ -90,21 +113,26 @@ def type_test(sen, window):
             draw_char(window, key, 0, counter, right)
             counter += 1
 
-        elif counter >= 1:
+        elif counter >= 1 and key == 8:
             counter -= 1
             replacer = sen[counter]
             delete_char(window, replacer, 0, counter)
-            
+        elif key == 32 or key == 44 or key == 46:
+            draw_char(window, key, 0, counter, right)
+            counter += 1
+            t = draw_wpm(window, t, counter+1, wpm_list)
         
     
 
 def main(window):
-    
+    curses.curs_set(0)
     sen_tup = sentences_func()
     welcome_message = "Welcome to this typing test! You will be given a block of text and need to type it as fast as possible.\n Press any key to start."
     draw_string(window, welcome_message, 0, 0)
     random_s = random_sentences(sen_tup)
     draw_string(window, random_s, 0 , 0)
+    window.addstr(1, 0, "WPM: ")
+    window.refresh()
     type_test(random_s, window)
 
 
