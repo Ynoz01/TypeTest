@@ -3,7 +3,7 @@ import time
 import curses 
 from curses import wrapper
 
-
+#
 
 def sentences_func():
     sentences = (
